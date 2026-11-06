@@ -5,6 +5,8 @@ import "../components" as Components
 Rectangle {
     id: indicator
     property int activeZone: 0
+    property int zoneWidth: 100
+    property int zoneHeight: 100
     property bool hovering: false
     property var zones: []
     width: parent.width
@@ -18,10 +20,10 @@ Rectangle {
 
         Item {
             id: zone
-            x: ((modelData.x / 100) * (indicator.width)) 
-            y: ((modelData.y / 100) * (indicator.height)) 
-            width: ((modelData.width / 100) * (indicator.width)) 
-            height: ((modelData.height / 100) * (indicator.height))
+            x: ((modelData.x / indicator.zoneWidth) * (indicator.width))
+            y: ((modelData.y / indicator.zoneHeight) * (indicator.height))
+            width: ((modelData.width / indicator.zoneWidth) * (indicator.width))
+            height: ((modelData.height / indicator.zoneHeight) * (indicator.height))
 
             Rectangle {
                 property int padding: 2

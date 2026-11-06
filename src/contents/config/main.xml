@@ -66,6 +66,10 @@
                 [
     {
         &quot;name&quot;: &quot;Priority Grid&quot;,
+        &quot;size&quot;: {
+            &quot;width&quot;: 100,
+            &quot;height&quot;: 100
+        },
         &quot;padding&quot;: 0,
         &quot;zones&quot;: [
             {
@@ -90,6 +94,10 @@
     },
     {
         &quot;name&quot;: &quot;Quadrant Grid&quot;,
+        &quot;size&quot;: {
+            &quot;width&quot;: 100,
+            &quot;height&quot;: 100
+        },
         &quot;zones&quot;: [
             {
                 &quot;x&quot;: 0,

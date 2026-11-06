@@ -62,6 +62,8 @@ Item {
                 Components.Indicator {
                     zones: modelData.zones
                     activeZone: (currentLayout == index) ? highlightedZone : -1
+                    zoneWidth: modelData.size.width
+                    zoneHeight: modelData.size.height
                     width: 160 - 30
                     height: 100 - 30
                     hovering: (currentLayout == index)

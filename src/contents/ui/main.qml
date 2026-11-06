@@ -45,7 +45,7 @@ PlasmaCore.Dialog {
 
     function loadConfig() {
 
-        const defaultLayouts = '[{"name":"Priority Grid","padding":0,"zones":[{"x":0,"y":0,"height":100,"width":25},{"x":25,"y":0,"height":100,"width":50},{"x":75,"y":0,"height":100,"width":25}]},{"name":"Quadrant Grid","zones":[{"x":0,"y":0,"height":50,"width":50},{"x":0,"y":50,"height":50,"width":50},{"x":50,"y":50,"height":50,"width":50},{"x":50,"y":0,"height":50,"width":50}]}]'
+        const defaultLayouts = '[{"name":"Priority Grid","size":{"width":100,"height":100},"padding":0,"zones":[{"x":0,"y":0,"height":100,"width":25},{"x":25,"y":0,"height":100,"width":50},{"x":75,"y":0,"height":100,"width":25}]},{"name":"Quadrant Grid","size":{"width":100,"height":100},"zones":[{"x":0,"y":0,"height":50,"width":50},{"x":0,"y":50,"height":50,"width":50},{"x":50,"y":50,"height":50,"width":50},{"x":50,"y":0,"height":50,"width":50}]}]';
 
         let layouts;
 
@@ -54,6 +54,15 @@ PlasmaCore.Dialog {
         } catch (e) {
             errors = errors.concat(`Could not load layouts from configuration, using default layouts.\nError: ${e.message}`);
             layouts = JSON.parse(defaultLayouts);
+        }
+
+        for (const layout of layouts) {
+            if (layout.size){
+                if (!layout.size.width || layout.size.width < 0) layout.size.width = 100;
+                if (!layout.size.height || layout.size.height < 0) layout.size.height = 100;
+            } else {
+                layout.size = { width: 100, height: 100 };
+            }
         }
 
         // load values from configuration
@@ -173,16 +182,20 @@ PlasmaCore.Dialog {
 
         client.zone = -1;
         // get all zones in the current layout
-        const zones = config.layouts[currentLayout].zones;
+        const layout = config.layouts[currentLayout];
+        const zones = layout.zones;
+        const layoutWidth = layout.size.width || 100;
+        const layoutHeight = layout.size.height || 100;
+        const layoutPadding = layout.padding || 0;
         // loop through zones and compare with the geometries of the client
         for (let i = 0; i < zones.length; i++) {
             const zone = zones[i];
-            const zonePadding = config.layouts[currentLayout].padding || 0;
-            const zoneX = ((zone.x / 100) * (clientArea.width - zonePadding)) + zonePadding;
-            const zoneY = ((zone.y / 100) * (clientArea.height - zonePadding)) + zonePadding;
-            const zoneWidth = ((zone.width / 100) * (clientArea.width - zonePadding)) - zonePadding;
-            const zoneHeight = ((zone.height / 100) * (clientArea.height - zonePadding)) - zonePadding;
-            if (client.frameGeometry.x == zoneX && client.frameGeometry.y == zoneY && client.frameGeometry.width == zoneWidth && client.frameGeometry.height == zoneHeight) {
+
+            const zoneX = Math.round(((zone.x / layoutWidth) * (clientArea.width - layoutPadding)) + layoutPadding);
+            const zoneY = Math.round(((zone.y / layoutHeight) * (clientArea.height - layoutPadding)) + layoutPadding);
+            const zoneWidth = Math.round(((zone.width / layoutWidth) * (clientArea.width - layoutPadding)) - layoutPadding);
+            const zoneHeight = Math.round(((zone.height / layoutHeight) * (clientArea.height - layoutPadding)) - layoutPadding);
+            if (Math.round(client.frameGeometry.x) === zoneX && Math.round(client.frameGeometry.y) === zoneY && Math.round(client.frameGeometry.width) === zoneWidth && Math.round(client.frameGeometry.height) === zoneHeight) {
                 // zone found, set it and exit the loop
                 client.zone = i;
                 client.layout = currentLayout;
@@ -275,16 +288,16 @@ PlasmaCore.Dialog {
             x: client.frameGeometry.x + (client.frameGeometry.width / 2),
             y: client.frameGeometry.y + (client.frameGeometry.height / 2)
         };
-
-        const zones = config.layouts[currentLayout].zones;
+        const layout = config.layouts[currentLayout];
+        const zones = layout.zones;
         let closestZone = null;
         let closestDistance = Infinity;
 
         for (let i = 0; i < zones.length; i++) {
             const zone = zones[i];
             const zoneCenter = {
-                x: (zone.x + zone.width / 2) / 100 * clientArea.width + clientArea.x,
-                y: (zone.y + zone.height / 2) / 100 * clientArea.height + clientArea.y
+                x: (zone.x + zone.width / 2) / layout.size.width * clientArea.width + clientArea.x,
+                y: (zone.y + zone.height / 2) / layout.size.height * clientArea.height + clientArea.y
             };
             const distance = Math.sqrt(Math.pow(centerPointOfClient.x - zoneCenter.x, 2) + Math.pow(centerPointOfClient.y - zoneCenter.y, 2));
             if (distance < closestDistance) {
@@ -304,15 +317,18 @@ PlasmaCore.Dialog {
             x: client.frameGeometry.x + (client.frameGeometry.width / 2),
             y: client.frameGeometry.y + (client.frameGeometry.height / 2)
         };
-        const zones = config.layouts[currentLayout].zones;
+        const layout = config.layouts[currentLayout];
+        const layoutWidth = layout.size.width;
+        const layoutHeight = layout.size.height;
+        const zones = layout.zones;
         let currentZoneIndex = null;
         let closestDistance = Infinity;
 
         for (let i = 0; i < zones.length; i++) {
             const zone = zones[i];
             let zoneCenter = {
-                x: (zone.x + zone.width / 2) / 100 * clientArea.width + clientArea.x,
-                y: (zone.y + zone.height / 2) / 100 * clientArea.height + clientArea.y
+                x: (zone.x + zone.width / 2) / layoutWidth * clientArea.width + clientArea.x,
+                y: (zone.y + zone.height / 2) / layoutHeight * clientArea.height + clientArea.y
             };
             const distance = Math.sqrt(
                 Math.pow(centerPointOfClient.x - zoneCenter.x, 2) +
@@ -332,6 +348,9 @@ PlasmaCore.Dialog {
         let specularZoneIndex = null;
         let minDistance = Infinity;
 
+        let layoutWidthTolerance = layoutWidth / 20;
+        let layoutHeightTolerance = layoutHeight / 20;
+
         for (let i = 0; i < zones.length; i++) {
             if (i === currentZoneIndex) continue;
 
@@ -342,16 +361,16 @@ PlasmaCore.Dialog {
             };
             let isSpecular = false;
             if (isVerticalAxis) {
-                isSpecular = Math.abs(zoneCenter.x - currentZoneCenter.x) < 5 &&
-                    Math.abs((zoneCenter.y - 50) - (50 - currentZoneCenter.y)) < 5;
+                isSpecular = Math.abs(zoneCenter.x - currentZoneCenter.x) < layoutWidthTolerance &&
+                    Math.abs((zoneCenter.y + currentZoneCenter.y) - layoutHeight) < layoutHeightTolerance;
             } else {
-                isSpecular = Math.abs(zoneCenter.y - currentZoneCenter.y) < 5 &&
-                    Math.abs((zoneCenter.x - 50) - (50 - currentZoneCenter.x)) < 5;
+                isSpecular = Math.abs(zoneCenter.y - currentZoneCenter.y) < layoutHeightTolerance &&
+                    Math.abs((zoneCenter.x + currentZoneCenter.x) - layoutWidth) < layoutWidthTolerance;
             }
             if (isSpecular) {
                 const specularPoint = {
-                    x: !isVerticalAxis ? (100 - currentZoneCenter.x) : currentZoneCenter.x,
-                    y: isVerticalAxis ? (100 - currentZoneCenter.y) : currentZoneCenter.y
+                    "x": !isVerticalAxis ? (layoutWidth - currentZoneCenter.x) : currentZoneCenter.x,
+                    "y": isVerticalAxis ? (layoutHeight - currentZoneCenter.y) : currentZoneCenter.y
                 };
                 const distance = Math.sqrt(
                     Math.pow(zoneCenter.x - specularPoint.x, 2) +
@@ -509,9 +528,10 @@ PlasmaCore.Dialog {
                     if (config.rememberWindowGeometries && client.zone != -1) {
                         if (client.oldGeometry) {
                             const geometry = client.oldGeometry;
-                            const zone = config.layouts[client.layout].zones[client.zone];
-                            const zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x;
-                            const zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x);
+                            const layout = config.layouts[client.layout];
+                            const zone = layout.zones[client.zone];
+                            const zoneCenterX = (zone.x + zone.width / 2) / layout.size.width * cachedClientArea.width + cachedClientArea.x;
+                            const zoneX = ((zone.x / layout.size.width) * cachedClientArea.width + cachedClientArea.x);
                             const newGeometry = Qt.rect(Math.round(Workspace.cursorPos.x - geometry.width / 2), Math.round(client.frameGeometry.y), Math.round(geometry.width), Math.round(geometry.height));
                             client.frameGeometry = newGeometry;
                         }

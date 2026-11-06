@@ -23,6 +23,8 @@ Item {
             id: zone
 
             property int zoneIndex: index
+            property int zoneWidth: config.layouts[layoutIndex].size.width || 100
+            property int zoneHeight: config.layouts[layoutIndex].size.height || 100
             property int zonePadding: config.layouts[layoutIndex].padding || 0
             property var renderZones: config.zoneOverlayIndicatorDisplay == 1 ? [config.layouts[layoutIndex].zones[index]] : config.layouts[layoutIndex].zones
             property int activeIndex: config.zoneOverlayIndicatorDisplay == 1 ? 0 : index
@@ -30,10 +32,10 @@ Item {
 
             property bool active: ( highlightedZone == zoneIndex && currentLayout == layoutIndex )
 
-            x: ((modelData.x / 100) * (clientArea.width - zonePadding)) + zonePadding
-            y: ((modelData.y / 100) * (clientArea.height - zonePadding)) + zonePadding
-            implicitWidth: ((modelData.width / 100) * (clientArea.width - zonePadding)) - zonePadding
-            implicitHeight: ((modelData.height / 100) * (clientArea.height - zonePadding)) - zonePadding
+            x: ((modelData.x / zoneWidth) * (clientArea.width - zonePadding)) + zonePadding
+            y: ((modelData.y / zoneHeight) * (clientArea.height - zonePadding)) + zonePadding
+            implicitWidth: ((modelData.width / zoneWidth) * (clientArea.width - zonePadding)) - zonePadding
+            implicitHeight: ((modelData.height / zoneHeight) * (clientArea.height - zonePadding)) - zonePadding
 
             // zone indicator
             Rectangle {
@@ -83,6 +85,8 @@ Item {
                 Components.Indicator {
                     zones: renderZones
                     activeZone: activeIndex
+                    zoneWidth: zone.zoneWidth
+                    zoneHeight: zone.zoneHeight
                     anchors.centerIn: parent
                     width: parent.width - 20
                     height: parent.height - 20
