@@ -34,8 +34,8 @@ Item {
 
             x: ((modelData.x / zoneWidth) * (clientArea.width - zonePadding)) + zonePadding
             y: ((modelData.y / zoneHeight) * (clientArea.height - zonePadding)) + zonePadding
-            implicitWidth: ((modelData.width / zoneWidth) * (clientArea.width - zonePadding)) - zonePadding
-            implicitHeight: ((modelData.height / zoneHeight) * (clientArea.height - zonePadding)) - zonePadding
+            width: ((modelData.width / zoneWidth) * (clientArea.width - zonePadding)) - zonePadding
+            height: ((modelData.height / zoneHeight) * (clientArea.height - zonePadding)) - zonePadding
 
             // zone indicator
             Rectangle {
